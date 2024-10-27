@@ -1,0 +1,39 @@
+---
+- name: Install Homebrew packages and applications
+  hosts: localhost
+  become: no
+  tasks:
+    - name: Tap Homebrew repositories
+      community.general.homebrew_tap:
+        name: "{{ '{{' }} item {{ '}}' }}"
+        state: present
+      loop:
+{%- for tap in taps %}
+        - {{ tap }}
+{%- endfor %}
+
+    - name: Install Homebrew packages
+      community.general.homebrew:
+        name: "{{ '{{' }} item {{ '}}' }}"
+        state: present
+      loop:
+{%- for brew in brews %}
+        - {{ brew }}
+{%- endfor %}
+
+    - name: Install Homebrew Cask applications
+      community.general.homebrew_cask:
+        name: "{{ '{{' }} item {{ '}}' }}"
+        state: present
+      loop:
+{%- for cask in casks %}
+        - {{ cask }}
+{%- endfor %}
+
+    - name: Install VS Code extensions
+      ansible.builtin.command: code --install-extension "{{ '{{' }} item {{ '}}' }}"
+      loop:
+{%- for ext in vscode %}
+        - {{ ext }}
+{%- endfor %}
+      changed_when: false
