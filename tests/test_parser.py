@@ -1,0 +1,92 @@
+from pathlib import Path
+
+import pytest
+
+from brewfile_converter import BrewfileParser, process_brewfile
+
+
+def test_parse_common_and_extended_directives() -> None:
+    content = '''
+# comment
+tap "homebrew/cask", "https://github.com/Homebrew/homebrew-cask"
+tap 'user/tools', clone_target: 'https://github.com/user/homebrew-tools'
+brew "wget"
+brew "python@3.12", args: ["HEAD"], link: false
+cask_args appdir: "/Applications", require_sha: true
+cask "iterm2"
+vscode "ms-python.python"
+mas "Xcode", id: 497799835
+whalebrew "ghcr.io/owner/tool:latest"
+'''
+
+    parsed = BrewfileParser.parse(content)
+
+    assert len(parsed.taps) == 2
+    assert parsed.taps[0].name == "homebrew/cask"
+    assert parsed.taps[0].clone_target == "https://github.com/Homebrew/homebrew-cask"
+
+    assert len(parsed.brews) == 2
+    assert parsed.brews[1].options["args"] == ["HEAD"]
+    assert parsed.brews[1].options["link"] is False
+
+    assert len(parsed.casks) == 1
+    assert parsed.casks[0].options["appdir"] == "/Applications"
+    assert parsed.casks[0].options["require_sha"] is True
+
+    assert parsed.vscode == ["ms-python.python"]
+    assert len(parsed.mas_apps) == 1
+    assert parsed.mas_apps[0].app_id == 497799835
+
+    assert len(parsed.whalebrews) == 1
+    assert parsed.whalebrews[0].name == "ghcr.io/owner/tool:latest"
+
+
+def test_unsupported_and_strict_mode(tmp_path: Path) -> None:
+    brewfile = tmp_path / "Brewfile"
+    brewfile.write_text('brew "wget"\nmas "Xcode"\nunknown "x"\n')
+
+    result = process_brewfile(brewfile)
+    assert len(result.issues) == 2
+
+    with pytest.raises(RuntimeError):
+        process_brewfile(brewfile, strict=True)
+
+
+def test_warns_when_no_supported_entries(tmp_path: Path) -> None:
+    brewfile = tmp_path / "Brewfile"
+    brewfile.write_text('# comments only\n# still comments\n')
+
+    result = process_brewfile(brewfile)
+    assert any("No supported Brewfile entries were detected" in issue.message for issue in result.issues)
+
+
+def test_normalize_with_brew_uses_brew_bundle_lists(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    brewfile = tmp_path / "Brewfile"
+    brewfile.write_text(
+        '\n'.join(
+            [
+                'tap "homebrew/cask"',
+                'brew "wget", restart_service: true',
+                'cask "visual-studio-code"',
+                'vscode "ms-python.python"',
+                'mas "Xcode", id: 497799835',
+            ]
+        )
+    )
+
+    fake_lists = {
+        "--tap": ["homebrew/cask"],
+        "--formula": ["wget", "jq"],
+        "--cask": ["visual-studio-code"],
+        "--vscode": ["ms-python.python"],
+        "--mas": ["Xcode", "GarageBand"],
+    }
+
+    def fake_brew_bundle_list(_: Path, flag: str) -> list[str]:
+        return fake_lists[flag]
+
+    monkeypatch.setattr("brewfile_converter.normalize.brew_bundle_list", fake_brew_bundle_list)
+
+    result = process_brewfile(brewfile, normalize_with_brew=True)
+    assert 'name: "jq"' in result.playbook
+    assert any("mas app id unavailable" in issue.message for issue in result.issues)

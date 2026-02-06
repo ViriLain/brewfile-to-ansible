@@ -1,0 +1,110 @@
+---
+- name: Install Homebrew packages and applications
+  hosts: localhost
+  become: false
+  tasks:
+{% if taps %}
+    - name: Tap Homebrew repositories
+      community.general.homebrew_tap:
+        name: "{{ '{{' }} item.name {{ '}}' }}"
+        state: present
+        url: "{{ '{{' }} item.clone_target | default(omit) {{ '}}' }}"
+      loop:
+{%- for tap in taps %}
+        - name: "{{ tap.name }}"
+{%- if tap.clone_target %}
+          clone_target: "{{ tap.clone_target }}"
+{%- endif %}
+{%- if tap._brewfile_options %}
+          _brewfile_options: "{{ tap._brewfile_options }}"
+{%- endif %}
+{%- endfor %}
+{% endif %}
+
+{% if brews %}
+    - name: Install Homebrew packages
+      community.general.homebrew:
+        name: "{{ '{{' }} item.name {{ '}}' }}"
+        state: present
+        install_options: "{{ '{{' }} item.install_options | default(omit) {{ '}}' }}"
+      loop:
+{%- for brew in brews %}
+        - name: "{{ brew.name }}"
+{%- if brew.install_options %}
+          install_options: {{ brew.install_options }}
+{%- endif %}
+{%- if brew._brewfile_options %}
+          _brewfile_options: "{{ brew._brewfile_options }}"
+{%- endif %}
+{%- endfor %}
+{% endif %}
+
+{% if casks %}
+    - name: Install Homebrew Cask applications
+      community.general.homebrew_cask:
+        name: "{{ '{{' }} item.name {{ '}}' }}"
+        state: present
+        install_options: "{{ '{{' }} item.install_options | default(omit) {{ '}}' }}"
+      loop:
+{%- for cask in casks %}
+        - name: "{{ cask.name }}"
+{%- if cask.install_options %}
+          install_options: {{ cask.install_options }}
+{%- endif %}
+{%- if cask._brewfile_options %}
+          _brewfile_options: "{{ cask._brewfile_options }}"
+{%- endif %}
+{%- endfor %}
+{% endif %}
+
+{% if mas_apps %}
+    - name: Install Mac App Store applications
+      community.general.mas:
+        id: "{{ '{{' }} item.id {{ '}}' }}"
+        state: present
+      loop:
+{%- for app in mas_apps %}
+{%- if app.id %}
+        - id: {{ app.id }}
+          name: "{{ app.name }}"
+{%- if app._brewfile_options %}
+          _brewfile_options: "{{ app._brewfile_options }}"
+{%- endif %}
+{%- endif %}
+{%- endfor %}
+{% endif %}
+
+{% if whalebrews %}
+    - name: Capture installed whalebrew images
+      ansible.builtin.command: whalebrew list
+      register: whalebrew_installed_images
+      changed_when: false
+      failed_when: false
+
+    - name: Install whalebrew images
+      ansible.builtin.command: whalebrew install "{{ '{{' }} item.name {{ '}}' }}"
+      loop:
+{%- for item in whalebrews %}
+        - name: "{{ item.name }}"
+{%- if item._brewfile_options %}
+          _brewfile_options: "{{ item._brewfile_options }}"
+{%- endif %}
+{%- endfor %}
+      when: item.name not in whalebrew_installed_images.stdout_lines
+{% endif %}
+
+{% if vscode %}
+    - name: Capture installed VS Code extensions
+      ansible.builtin.command: code --list-extensions
+      register: vscode_installed_extensions
+      changed_when: false
+      failed_when: false
+
+    - name: Install VS Code extensions
+      ansible.builtin.command: code --install-extension "{{ '{{' }} item {{ '}}' }}" --force
+      loop:
+{%- for ext in vscode %}
+        - "{{ ext }}"
+{%- endfor %}
+      when: item not in vscode_installed_extensions.stdout_lines
+{% endif %}

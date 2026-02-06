@@ -1,0 +1,50 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "brewfile-to-ansible"
+version = "0.1.0"
+description = "Convert Homebrew Brewfiles to Ansible playbooks"
+readme = "README.md"
+requires-python = ">=3.9"
+dependencies = [
+  "jinja2>=3.1.0",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=8.0.0",
+  "ruff>=0.4.0",
+  "mypy>=1.10.0",
+]
+
+[project.scripts]
+brewfile-to-ansible = "brewfile_converter.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["brewfile_converter*"]
+
+[tool.setuptools.package-data]
+brewfile_converter = ["templates/*.j2"]
+
+[tool.pytest.ini_options]
+addopts = "-q"
+testpaths = ["tests"]
+
+[tool.ruff]
+target-version = "py39"
+line-length = 120
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP", "B", "SIM"]
+
+[tool.mypy]
+python_version = "3.9"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+
+[[tool.mypy.overrides]]
+module = "jinja2.*"
+ignore_missing_imports = true
