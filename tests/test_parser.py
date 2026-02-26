@@ -90,3 +90,22 @@ def test_normalize_with_brew_uses_brew_bundle_lists(tmp_path: Path, monkeypatch:
     result = process_brewfile(brewfile, normalize_with_brew=True)
     assert 'name: "jq"' in result.playbook
     assert any("mas app id unavailable" in issue.message for issue in result.issues)
+
+
+def test_cask_args_does_not_bleed_into_brew_entries() -> None:
+    content = """\
+cask_args appdir: "/Applications", require_sha: true
+brew "wget"
+brew "git"
+cask "iterm2"
+"""
+    parsed = BrewfileParser.parse(content)
+
+    # brew entries must have no cask_args options
+    for brew in parsed.brews:
+        assert "appdir" not in brew.options, f"cask_args bled into brew '{brew.name}'"
+        assert "require_sha" not in brew.options, f"cask_args bled into brew '{brew.name}'"
+
+    # cask entries must have cask_args options
+    assert parsed.casks[0].options.get("appdir") == "/Applications"
+    assert parsed.casks[0].options.get("require_sha") is True
