@@ -1,6 +1,7 @@
 ---
 - name: Install Homebrew packages and applications
   hosts: localhost
+  gather_facts: false
   become: false
   tasks:
 {% if taps %}

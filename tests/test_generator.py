@@ -52,3 +52,13 @@ def test_install_options_renders_valid_yaml(tmp_path: Path) -> None:
     item = next(i for i in loop if i["name"] == "git")
     assert isinstance(item["install_options"], list)
     assert "--with-openssl" in item["install_options"]
+
+
+def test_playbook_sets_gather_facts_false(tmp_path: Path) -> None:
+    brewfile = tmp_path / "Brewfile"
+    brewfile.write_text('brew "wget"\n')
+
+    result = process_brewfile(brewfile)
+    docs = list(yaml.safe_load_all(result.playbook))
+    play = docs[0][0]
+    assert play.get("gather_facts") is False
