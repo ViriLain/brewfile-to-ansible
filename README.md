@@ -14,7 +14,7 @@ Converts a Homebrew `Brewfile` into an Ansible playbook using `community.general
 ## Installation
 
 ```bash
-git clone https://github.com/you/brewfile-to-ansible.git
+git clone https://github.com/ViriLain/brewfile-to-ansible.git
 cd brewfile-to-ansible
 python3 -m venv .venv
 source .venv/bin/activate
