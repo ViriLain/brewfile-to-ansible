@@ -1,5 +1,6 @@
-import yaml
 from pathlib import Path
+
+import yaml
 
 from brewfile_converter import process_brewfile
 
@@ -41,7 +42,12 @@ def test_install_options_renders_valid_yaml(tmp_path: Path) -> None:
 
     # install_options must be a list, not a string like "['--with-openssl', '--HEAD']"
     tasks = docs[0][0]["tasks"]
-    brew_task = next(t for t in tasks if "community.general.homebrew" in t)
+    brew_task = next(
+        t for t in tasks
+        if "community.general.homebrew" in t
+        and "community.general.homebrew_tap" not in t
+        and "community.general.homebrew_cask" not in t
+    )
     loop = brew_task["loop"]
     item = next(i for i in loop if i["name"] == "git")
     assert isinstance(item["install_options"], list)
