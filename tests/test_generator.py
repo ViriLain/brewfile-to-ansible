@@ -62,3 +62,24 @@ def test_playbook_sets_gather_facts_false(tmp_path: Path) -> None:
     docs = list(yaml.safe_load_all(result.playbook))
     play = docs[0][0]
     assert play.get("gather_facts") is False
+
+
+def test_generated_playbook_is_valid_yaml(tmp_path: Path) -> None:
+    """Generated playbook must always be parseable YAML — no Python repr leakage."""
+    brewfile = tmp_path / "Brewfile"
+    brewfile.write_text(
+        "\n".join([
+            'tap "homebrew/cask-fonts"',
+            'brew "git", args: ["--with-openssl"]',
+            'brew "python@3.12", link: false, restart_service: true',
+            'cask_args appdir: "/Applications"',
+            'cask "font-fira-code"',
+            'cask "iterm2"',
+        ])
+    )
+
+    result = process_brewfile(brewfile)
+    # Must not raise
+    docs = list(yaml.safe_load_all(result.playbook))
+    assert docs
+    assert isinstance(docs[0], list)  # list of plays
