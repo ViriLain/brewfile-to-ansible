@@ -109,3 +109,19 @@ cask "iterm2"
     # cask entries must have cask_args options
     assert parsed.casks[0].options.get("appdir") == "/Applications"
     assert parsed.casks[0].options.get("require_sha") is True
+
+
+def test_names_with_special_characters_parse_correctly() -> None:
+    content = """\
+tap "homebrew/cask-fonts"
+brew "python@3.12"
+cask "font-fira-code"
+cask "visual-studio-code"
+"""
+    parsed = BrewfileParser.parse(content)
+
+    assert parsed.taps[0].name == "homebrew/cask-fonts"
+    assert parsed.brews[0].name == "python@3.12"
+    assert parsed.casks[0].name == "font-fira-code"
+    assert parsed.casks[1].name == "visual-studio-code"
+    assert not parsed.unsupported
