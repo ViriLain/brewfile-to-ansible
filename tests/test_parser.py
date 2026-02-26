@@ -125,3 +125,19 @@ cask "visual-studio-code"
     assert parsed.casks[0].name == "font-fira-code"
     assert parsed.casks[1].name == "visual-studio-code"
     assert not parsed.unsupported
+
+
+def test_blank_and_comment_lines_are_silently_ignored() -> None:
+    content = """\
+# This is a comment
+tap "homebrew/core"
+
+# Another comment
+brew "wget"
+
+"""
+    parsed = BrewfileParser.parse(content)
+
+    assert len(parsed.taps) == 1
+    assert len(parsed.brews) == 1
+    assert not parsed.unsupported
