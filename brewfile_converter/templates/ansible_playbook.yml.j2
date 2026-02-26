@@ -31,7 +31,10 @@
 {%- for brew in brews %}
         - name: "{{ brew.name }}"
 {%- if brew.install_options %}
-          install_options: {{ brew.install_options }}
+          install_options:
+{%- for opt in brew.install_options %}
+            - {{ opt | tojson }}
+{%- endfor %}
 {%- endif %}
 {%- if brew._brewfile_options %}
           _brewfile_options: "{{ brew._brewfile_options }}"
@@ -49,7 +52,10 @@
 {%- for cask in casks %}
         - name: "{{ cask.name }}"
 {%- if cask.install_options %}
-          install_options: {{ cask.install_options }}
+          install_options:
+{%- for opt in cask.install_options %}
+            - {{ opt | tojson }}
+{%- endfor %}
 {%- endif %}
 {%- if cask._brewfile_options %}
           _brewfile_options: "{{ cask._brewfile_options }}"
