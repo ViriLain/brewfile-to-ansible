@@ -104,3 +104,41 @@ def test_unsupported_cask_options_appear_in_brewfile_options_comment(tmp_path: P
     result = process_brewfile(brewfile)
     assert "quit_application" in result.playbook
     assert "_brewfile_options" in result.playbook
+
+
+def test_playbook_renders_with_taps_only(tmp_path: Path) -> None:
+    brewfile = tmp_path / "Brewfile"
+    brewfile.write_text('tap "homebrew/core"\n')
+
+    result = process_brewfile(brewfile)
+    docs = list(yaml.safe_load_all(result.playbook))
+    assert docs
+    tasks = docs[0][0]["tasks"]
+    assert len(tasks) == 1
+    assert "community.general.homebrew_tap" in tasks[0]
+
+
+def test_playbook_renders_with_casks_only(tmp_path: Path) -> None:
+    brewfile = tmp_path / "Brewfile"
+    brewfile.write_text('cask "iterm2"\n')
+
+    result = process_brewfile(brewfile)
+    docs = list(yaml.safe_load_all(result.playbook))
+    assert docs
+    tasks = docs[0][0]["tasks"]
+    assert len(tasks) == 1
+    assert "community.general.homebrew_cask" in tasks[0]
+
+
+def test_playbook_renders_with_brews_only(tmp_path: Path) -> None:
+    brewfile = tmp_path / "Brewfile"
+    brewfile.write_text('brew "wget"\n')
+
+    result = process_brewfile(brewfile)
+    docs = list(yaml.safe_load_all(result.playbook))
+    assert docs
+    tasks = docs[0][0]["tasks"]
+    assert len(tasks) == 1
+    assert "community.general.homebrew" in tasks[0]
+    assert "community.general.homebrew_tap" not in tasks[0]
+    assert "community.general.homebrew_cask" not in tasks[0]
