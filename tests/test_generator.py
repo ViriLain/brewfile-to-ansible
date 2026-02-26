@@ -83,3 +83,24 @@ def test_generated_playbook_is_valid_yaml(tmp_path: Path) -> None:
     docs = list(yaml.safe_load_all(result.playbook))
     assert docs
     assert isinstance(docs[0], list)  # list of plays
+
+
+def test_unsupported_brew_options_appear_in_brewfile_options_comment(tmp_path: Path) -> None:
+    brewfile = tmp_path / "Brewfile"
+    brewfile.write_text('brew "wget", restart_service: true, link: false\n')
+
+    result = process_brewfile(brewfile)
+
+    # restart_service and link are not Ansible module params — must appear as metadata
+    assert "restart_service" in result.playbook
+    assert "link" in result.playbook
+    assert "_brewfile_options" in result.playbook
+
+
+def test_unsupported_cask_options_appear_in_brewfile_options_comment(tmp_path: Path) -> None:
+    brewfile = tmp_path / "Brewfile"
+    brewfile.write_text('cask "iterm2", quit_application: true\n')
+
+    result = process_brewfile(brewfile)
+    assert "quit_application" in result.playbook
+    assert "_brewfile_options" in result.playbook
