@@ -1,99 +1,88 @@
-# Brewfile to Ansible Converter
+# brewfile-to-ansible
 
-Convert a Homebrew `Brewfile` into an Ansible playbook.
+Converts a Homebrew `Brewfile` into an Ansible playbook using `community.general` modules.
 
-The converter now supports common Brewfile directives and option styles, including quoted and unquoted values, inline option hashes, arrays, comments, and strict-mode validation.
+## Prerequisites
 
-## Features
+- Python 3.9+
+- [Ansible](https://docs.ansible.com/ansible/latest/installation_guide/index.html) with the `community.general` collection:
 
-- Parses directives:
-  - `tap`
-  - `brew`
-  - `cask`
-  - `cask_args` (applied to following `cask` entries)
-  - `vscode`
-  - `mas`
-  - `whalebrew`
-- Supports both single and double quotes.
-- Parses Ruby-style values:
-  - booleans (`true` / `false`)
-  - integers
-  - arrays (`[...]`)
-  - inline hashes (`{...}`)
-  - symbols (`:something`)
-- Preserves unsupported options in generated loop metadata (`_brewfile_options`) to avoid silent data loss.
-- Emits warnings for unsupported directives or malformed lines.
-- Supports `--strict` mode to fail conversion when unsupported lines are encountered.
-- Supports `--normalize-with-brew` mode to normalize entries via `brew bundle list`.
+  ```bash
+  ansible-galaxy collection install community.general
+  ```
 
 ## Installation
 
-From the project root:
-
 ```bash
+git clone https://github.com/you/brewfile-to-ansible.git
+cd brewfile-to-ansible
 python3 -m venv .venv
 source .venv/bin/activate
-pip install -e .[dev]
+pip install -e .
 ```
 
 ## Usage
 
-Convert and print to stdout:
-
 ```bash
+# Print playbook to stdout
 brewfile-to-ansible Brewfile
-```
 
-Convert and write to a file:
-
-```bash
+# Write playbook to a file
 brewfile-to-ansible Brewfile -o playbook.yml
-```
 
-Fail if the parser encounters unsupported lines:
-
-```bash
+# Fail on any unsupported or malformed lines
 brewfile-to-ansible Brewfile --strict
-```
 
-Normalize entries using Homebrew Bundle's parser before conversion:
+# Parse and report issues without generating output
+brewfile-to-ansible Brewfile --dry-run
 
-```bash
+# Normalize entries via `brew bundle list` before converting
 brewfile-to-ansible Brewfile --normalize-with-brew
+
+# Use a custom Jinja2 template directory
+brewfile-to-ansible Brewfile -t ./my-templates -o playbook.yml
 ```
 
-Use a custom template directory:
+## Running the generated playbook
 
 ```bash
-brewfile-to-ansible Brewfile -t ./templates -o playbook.yml
+ansible-playbook playbook.yml
 ```
 
-## Generated playbook behavior
+The playbook targets `localhost`, runs as the current user (`become: false`), and assumes Homebrew is already installed.
 
-- Uses Homebrew modules where available:
-  - `community.general.homebrew_tap`
-  - `community.general.homebrew`
-  - `community.general.homebrew_cask`
-  - `community.general.mas`
-- Installs VS Code extensions only when missing by checking `code --list-extensions` first.
-- Installs whalebrew images only when missing by checking `whalebrew list` first.
+## Supported directives
 
-## Support matrix and caveats
+| Directive    | Support  | Notes                                                        |
+|--------------|----------|--------------------------------------------------------------|
+| `tap`        | Full     | Supports optional `clone_target` URL                         |
+| `brew`       | Full     | `args`/`install_options` map to `install_options` parameter  |
+| `cask`       | Full     | Inherits `cask_args` options                                 |
+| `cask_args`  | Full     | Applied to all following `cask` entries                      |
+| `mas`        | Limited  | Parsed but app IDs lost after `--normalize-with-brew`        |
+| `vscode`     | Limited  | Shell-based install, not idempotent via a native module      |
+| `whalebrew`  | Limited  | Parsed but not normalized by `brew bundle list`              |
 
-- The parser aims to be permissive for many Brewfile formats, but Brewfile is Ruby DSL and can contain arbitrary Ruby.
-- Fully dynamic Ruby constructs (conditionals, loops, variables, method calls) are not evaluated.
-- Unsupported directives are reported as warnings and can fail conversion under `--strict`.
-- Some directive options may not map directly to Ansible module parameters; those options are preserved in metadata for manual follow-up.
-- `--normalize-with-brew` requires `brew` and may drop some option-level details that `brew bundle list` does not emit (for example, `mas` app IDs for some entries); these are reported as warnings.
+## Known limitations
+
+- **No Ruby DSL evaluation.** Brewfile is Ruby. Loops, conditionals, variables, and method calls are not evaluated — those lines are skipped and reported as warnings.
+- **MAS app IDs.** `--normalize-with-brew` cannot recover App Store app IDs from `brew bundle list`. MAS entries are preserved from the original Brewfile but will be incomplete after normalization.
+- **VS Code and Whalebrew.** These use shell commands in the generated playbook and are less reliable than the native Homebrew tasks.
+- **`accept_external_apps` not set.** Some casks require this flag; the generated playbook does not set it. Pass it via `install_options` if needed.
+- **Homebrew must already be installed.** The generated playbook does not install Homebrew itself.
 
 ## Development
 
-Run tests:
-
 ```bash
-pytest
+pip install -e .[dev]
+pytest          # run tests
+ruff check .    # lint
+mypy brewfile_converter/  # type check
 ```
 
-## Brewfile reference
+## References
 
-- [Homebrew Bundle documentation](https://github.com/Homebrew/homebrew-bundle)
+- [Homebrew Bundle](https://github.com/Homebrew/homebrew-bundle)
+- [community.general.homebrew](https://docs.ansible.com/ansible/latest/collections/community/general/homebrew_module.html)
+- [community.general.homebrew_tap](https://docs.ansible.com/ansible/latest/collections/community/general/homebrew_tap_module.html)
+- [community.general.homebrew_cask](https://docs.ansible.com/ansible/latest/collections/community/general/homebrew_cask_module.html)
