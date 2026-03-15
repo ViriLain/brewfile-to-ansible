@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+# Lightweight commit-msg hook for contributors without pre-commit/commitlint.
+# Validates conventional commit format: type: subject
+# Install: git config core.hooksPath .githooks
+
+set -euo pipefail
+
+msg_file="$1"
+msg=$(head -1 "$msg_file")
+
+# Allow merge commits
+if echo "$msg" | grep -qE '^Merge '; then
+  exit 0
+fi
+
+pattern='^(fix|docs|test|chore|feat|refactor|ci|build|perf|style)(\(.+\))?: .+[^.]$'
+
+if ! echo "$msg" | grep -qE "$pattern"; then
+  echo "ERROR: commit message does not follow conventional commit format." >&2
+  echo "Expected: type: subject  (or type(scope): subject)" >&2
+  echo "Types: fix, docs, test, chore, feat, refactor, ci, build, perf, style" >&2
+  echo "Rules: lowercase subject, no trailing period" >&2
+  echo "Got: $msg" >&2
+  exit 1
+fi
+
+if [ ${#msg} -gt 120 ]; then
+  echo "ERROR: commit header exceeds 120 characters (got ${#msg})." >&2
+  exit 1
+fi
