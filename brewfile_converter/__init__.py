@@ -1,3 +1,9 @@
+"""Public API surface for the brewfile_converter package.
+
+Re-exports the parser, generator, CLI entry points, normalization helpers,
+and utility functions so consumers can ``import brewfile_converter`` directly.
+"""
+
 from .cli import main, process_brewfile
 from .generator import AnsiblePlaybookGenerator
 from .models import (
