@@ -6,7 +6,7 @@ from brewfile_converter import BrewfileParser, process_brewfile
 
 
 def test_parse_common_and_extended_directives() -> None:
-    content = '''
+    content = """
 # comment
 tap "homebrew/cask", "https://github.com/Homebrew/homebrew-cask"
 tap 'user/tools', clone_target: 'https://github.com/user/homebrew-tools'
@@ -17,7 +17,7 @@ cask "iterm2"
 vscode "ms-python.python"
 mas "Xcode", id: 497799835
 whalebrew "ghcr.io/owner/tool:latest"
-'''
+"""
 
     parsed = BrewfileParser.parse(content)
 
@@ -54,7 +54,7 @@ def test_unsupported_and_strict_mode(tmp_path: Path) -> None:
 
 def test_warns_when_no_supported_entries(tmp_path: Path) -> None:
     brewfile = tmp_path / "Brewfile"
-    brewfile.write_text('# comments only\n# still comments\n')
+    brewfile.write_text("# comments only\n# still comments\n")
 
     result = process_brewfile(brewfile)
     assert any("No supported Brewfile entries were detected" in issue.message for issue in result.issues)
@@ -63,7 +63,7 @@ def test_warns_when_no_supported_entries(tmp_path: Path) -> None:
 def test_normalize_with_brew_uses_brew_bundle_lists(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     brewfile = tmp_path / "Brewfile"
     brewfile.write_text(
-        '\n'.join(
+        "\n".join(
             [
                 'tap "homebrew/cask"',
                 'brew "wget", restart_service: true',

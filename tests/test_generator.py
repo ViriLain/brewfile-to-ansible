@@ -8,7 +8,7 @@ from brewfile_converter import process_brewfile
 def test_generation_includes_extended_sections(tmp_path: Path) -> None:
     brewfile = tmp_path / "Brewfile"
     brewfile.write_text(
-        '\n'.join(
+        "\n".join(
             [
                 'tap "homebrew/core"',
                 'brew "wget", args: ["HEAD"]',
@@ -43,7 +43,8 @@ def test_install_options_renders_valid_yaml(tmp_path: Path) -> None:
     # install_options must be a list, not a string like "['--with-openssl', '--HEAD']"
     tasks = docs[0][0]["tasks"]
     brew_task = next(
-        t for t in tasks
+        t
+        for t in tasks
         if "community.general.homebrew" in t
         and "community.general.homebrew_tap" not in t
         and "community.general.homebrew_cask" not in t
@@ -68,14 +69,16 @@ def test_generated_playbook_is_valid_yaml(tmp_path: Path) -> None:
     """Generated playbook must always be parseable YAML — no Python repr leakage."""
     brewfile = tmp_path / "Brewfile"
     brewfile.write_text(
-        "\n".join([
-            'tap "homebrew/cask-fonts"',
-            'brew "git", args: ["--with-openssl"]',
-            'brew "python@3.12", link: false, restart_service: true',
-            'cask_args appdir: "/Applications"',
-            'cask "font-fira-code"',
-            'cask "iterm2"',
-        ])
+        "\n".join(
+            [
+                'tap "homebrew/cask-fonts"',
+                'brew "git", args: ["--with-openssl"]',
+                'brew "python@3.12", link: false, restart_service: true',
+                'cask_args appdir: "/Applications"',
+                'cask "font-fira-code"',
+                'cask "iterm2"',
+            ]
+        )
     )
 
     result = process_brewfile(brewfile)
