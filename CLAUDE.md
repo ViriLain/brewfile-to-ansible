@@ -83,6 +83,15 @@ brewfile-to-ansible <brewfile> [-o OUTPUT] [-t TEMPLATE_DIR] [--strict] [--norma
 
 `tap`, `brew`, `cask`, `cask_args`, `vscode`, `mas`, `whalebrew`
 
+## Commit Messages
+
+This project uses [Conventional Commits](https://www.conventionalcommits.org/). Format: `type: subject` or `type(scope): subject`.
+
+- **Types**: `fix`, `docs`, `test`, `chore`, `feat`, `refactor`, `ci`, `build`, `perf`, `style`
+- **Subject**: lowercase, no trailing period, max 120 chars total header
+- Enforced by commitlint via pre-commit (install: `pre-commit install --hook-type commit-msg`)
+- Fallback shell hook available: `git config core.hooksPath .githooks`
+
 ## Testing
 
 Tests live in `tests/` and use pytest. Fixtures are in `tests/fixtures/brewfiles/`. Run `pytest` from the project root. The pytest config is in `pyproject.toml` with `-q` as the default addopt.
