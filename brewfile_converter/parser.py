@@ -1,3 +1,5 @@
+"""Brewfile parser that reads Homebrew Bundle DSL into structured data."""
+
 import re
 from typing import Optional
 
@@ -11,10 +13,17 @@ from .utils import (
 
 
 class BrewfileParser:
+    """Stateless parser that converts raw Brewfile text into a :class:`BrewfileContent`."""
+
     SUPPORTED_DIRECTIVES = {"tap", "brew", "cask", "vscode", "mas", "whalebrew", "cask_args"}
 
     @staticmethod
     def parse(content: str) -> BrewfileContent:
+        """Parse a full Brewfile string and return the categorised entries.
+
+        Unsupported or malformed lines are collected in
+        :attr:`BrewfileContent.unsupported` rather than raising.
+        """
         brewfile = BrewfileContent()
 
         for line_no, raw_line in enumerate(content.splitlines(), start=1):

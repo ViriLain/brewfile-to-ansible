@@ -1,3 +1,5 @@
+"""Text scanning and Ruby-DSL parsing helpers used by the Brewfile parser."""
+
 import re
 from typing import Any, Optional
 
@@ -54,6 +56,7 @@ _ESCAPE_MAP = {
 
 
 def unquote(value: str) -> str:
+    """Remove surrounding quotes and process escape sequences."""
     value = value.strip()
     if len(value) < 2 or value[0] != value[-1] or value[0] not in {"'", '"'}:
         return value
@@ -112,6 +115,7 @@ def split_top_level(value: str, sep: str = ",") -> list[str]:
 
 
 def normalize_key(key: str) -> str:
+    """Strip a Ruby symbol prefix, unquote, and convert hyphens to underscores."""
     clean = key.strip()
     if clean.startswith(":"):
         clean = clean[1:]
@@ -120,6 +124,7 @@ def normalize_key(key: str) -> str:
 
 
 def split_key_value(part: str) -> Optional[tuple[str, str]]:
+    """Split a ``key: value`` pair on the first top-level colon, or return None."""
     state = _ScanState()
 
     for idx, ch in enumerate(part):
@@ -137,6 +142,7 @@ def split_key_value(part: str) -> Optional[tuple[str, str]]:
 
 
 def parse_rubyish_value(value: str) -> Any:
+    """Convert a Ruby-DSL literal (bool, int, symbol, string, array, hash) to a Python value."""
     raw = value.strip()
     low = raw.lower()
 
@@ -171,6 +177,7 @@ def parse_rubyish_value(value: str) -> Any:
 
 
 def parse_options_and_positional(value: str) -> tuple[dict[str, Any], list[Any]]:
+    """Parse a comma-separated argument list into keyword options and positional values."""
     options: dict[str, Any] = {}
     positional: list[Any] = []
 
@@ -190,6 +197,11 @@ def parse_options_and_positional(value: str) -> tuple[dict[str, Any], list[Any]]
 
 
 def extract_first_argument(value: str) -> tuple[Optional[str], str]:
+    """Extract the first positional argument from a directive's argument string.
+
+    Returns a (name, remainder) tuple where *remainder* is everything after the
+    first argument, or (None, "") if no argument could be extracted.
+    """
     remaining = value.lstrip()
     if not remaining:
         return None, ""
@@ -220,5 +232,6 @@ def extract_first_argument(value: str) -> tuple[Optional[str], str]:
 
 
 def sanitize_options(value: dict[str, Any], ignore_keys: Optional[list[str]] = None) -> dict[str, Any]:
+    """Return a copy of *value* without internal (``_``-prefixed) or explicitly ignored keys."""
     ignore_keys = ignore_keys or []
     return {k: v for k, v in value.items() if k not in ignore_keys and not k.startswith("_")}

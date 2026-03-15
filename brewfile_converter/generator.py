@@ -1,3 +1,5 @@
+"""Jinja2-based Ansible playbook renderer for parsed Brewfile content."""
+
 import json
 from pathlib import Path
 from typing import Any, Optional
@@ -8,6 +10,8 @@ from .models import BrewfileContent
 
 
 class AnsiblePlaybookGenerator:
+    """Render a :class:`BrewfileContent` into an Ansible playbook via Jinja2 templates."""
+
     def __init__(self, template_dir: Optional[Path] = None) -> None:
         self.template_dir = (
             Path(template_dir)
@@ -43,6 +47,7 @@ class AnsiblePlaybookGenerator:
         return result
 
     def generate(self, brewfile: BrewfileContent, output_file: Optional[Path] = None) -> str:
+        """Render *brewfile* to an Ansible playbook string, optionally writing it to *output_file*."""
         taps = [
             {
                 "name": tap.name,

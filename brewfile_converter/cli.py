@@ -1,3 +1,5 @@
+"""CLI entry point and high-level conversion orchestrator."""
+
 import argparse
 import sys
 from pathlib import Path
@@ -16,6 +18,11 @@ def process_brewfile(
     strict: bool = False,
     normalize_with_brew: bool = False,
 ) -> ConversionOutput:
+    """Parse a Brewfile, generate an Ansible playbook, and return the result.
+
+    Raises :class:`RuntimeError` in strict mode when unsupported lines are
+    present, or if the Brewfile cannot be read.
+    """
     try:
         content = brewfile_path.read_text()
     except Exception as exc:
@@ -65,6 +72,7 @@ def _print_issues(issues: list[ParseIssue]) -> None:
 
 
 def main() -> None:
+    """CLI entry point for ``brewfile-to-ansible``."""
     parser = argparse.ArgumentParser(
         description="Convert Brewfile to Ansible playbook",
         formatter_class=argparse.RawDescriptionHelpFormatter,

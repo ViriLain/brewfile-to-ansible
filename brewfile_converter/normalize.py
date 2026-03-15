@@ -1,3 +1,5 @@
+"""Normalize parsed Brewfile entries using ``brew bundle list``."""
+
 import os
 import subprocess
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -7,6 +9,11 @@ from .models import BrewfileContent, BrewItem, MasItem, ParseIssue, TapItem
 
 
 def brew_bundle_list(brewfile_path: Path, bundle_flag: str) -> list[str]:
+    """Run ``brew bundle list <bundle_flag>`` and return the listed entry names.
+
+    Raises :class:`RuntimeError` if the ``brew`` command is missing or exits
+    with a non-zero status.
+    """
     env = os.environ.copy()
     env.setdefault("HOMEBREW_NO_AUTO_UPDATE", "1")
     env.setdefault("HOMEBREW_NO_INSTALL_CLEANUP", "1")
@@ -35,6 +42,12 @@ def brew_bundle_list(brewfile_path: Path, bundle_flag: str) -> list[str]:
 
 
 def normalize_with_brew_bundle(brewfile_path: Path, brewfile: BrewfileContent) -> BrewfileContent:
+    """Re-resolve all entries through ``brew bundle list`` and return a normalised copy.
+
+    Runs five ``brew bundle list`` calls in parallel (one per entry type) and
+    rebuilds the content using the canonical names Homebrew reports, preserving
+    any options from the original parse.
+    """
     normalized = BrewfileContent(
         taps=list(brewfile.taps),
         brews=list(brewfile.brews),
