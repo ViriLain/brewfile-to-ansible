@@ -46,8 +46,7 @@ def process_brewfile(
 
     if strict and brewfile_content.unsupported:
         details = "\n".join(
-            f"line {issue.line_no}: {issue.message} -> {issue.line.strip()}"
-            for issue in brewfile_content.unsupported
+            f"line {issue.line_no}: {issue.message} -> {issue.line.strip()}" for issue in brewfile_content.unsupported
         )
         raise RuntimeError(f"Strict mode failed due to unsupported lines:\n{details}")
 
@@ -112,10 +111,7 @@ Examples:
     parser.add_argument(
         "--normalize-with-brew",
         action="store_true",
-        help=(
-            "Use `brew bundle list` to normalize taps/formulae/casks/vscode/mas entries. "
-            "Requires Homebrew."
-        ),
+        help=("Use `brew bundle list` to normalize taps/formulae/casks/vscode/mas entries. Requires Homebrew."),
     )
     parser.add_argument(
         "--dry-run",

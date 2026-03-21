@@ -9,11 +9,7 @@ from .models import BrewfileContent
 
 class AnsiblePlaybookGenerator:
     def __init__(self, template_dir: Optional[Path] = None) -> None:
-        self.template_dir = (
-            Path(template_dir)
-            if template_dir
-            else Path(__file__).resolve().parent / "templates"
-        )
+        self.template_dir = Path(template_dir) if template_dir else Path(__file__).resolve().parent / "templates"
         self.env = Environment(loader=FileSystemLoader(str(self.template_dir)))
 
     @staticmethod
