@@ -55,10 +55,7 @@ def normalize_with_brew_bundle(brewfile_path: Path, brewfile: BrewfileContent) -
     results: dict[str, list[str]] = {}
 
     with ThreadPoolExecutor(max_workers=5) as executor:
-        future_to_flag = {
-            executor.submit(brew_bundle_list, brewfile_path, flag): flag
-            for flag in flags
-        }
+        future_to_flag = {executor.submit(brew_bundle_list, brewfile_path, flag): flag for flag in flags}
         for future in as_completed(future_to_flag):
             flag = future_to_flag[future]
             results[flag] = future.result()
@@ -69,18 +66,9 @@ def normalize_with_brew_bundle(brewfile_path: Path, brewfile: BrewfileContent) -
     vscode_names = results["--vscode"]
     mas_names = results["--mas"]
 
-    normalized.taps = [
-        tap_by_name.get(name, TapItem(name=name))
-        for name in tap_names
-    ]
-    normalized.brews = [
-        brew_by_name.get(name, BrewItem(name=name))
-        for name in brew_names
-    ]
-    normalized.casks = [
-        cask_by_name.get(name, BrewItem(name=name))
-        for name in cask_names
-    ]
+    normalized.taps = [tap_by_name.get(name, TapItem(name=name)) for name in tap_names]
+    normalized.brews = [brew_by_name.get(name, BrewItem(name=name)) for name in brew_names]
+    normalized.casks = [cask_by_name.get(name, BrewItem(name=name)) for name in cask_names]
     normalized.vscode = vscode_names
 
     normalized.mas_apps = []
