@@ -71,12 +71,10 @@
         state: present
       loop:
 {%- for app in mas_apps %}
-{%- if app.id %}
         - id: {{ app.id }}
           name: "{{ app.name }}"
 {%- if app._brewfile_options %}
           _brewfile_options: "{{ app._brewfile_options }}"
-{%- endif %}
 {%- endif %}
 {%- endfor %}
 {% endif %}

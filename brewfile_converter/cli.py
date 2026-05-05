@@ -17,7 +17,7 @@ def process_brewfile(
     normalize_with_brew: bool = False,
 ) -> ConversionOutput:
     try:
-        content = brewfile_path.read_text()
+        content = brewfile_path.read_text(encoding="utf-8")
     except Exception as exc:
         raise RuntimeError(f"Failed to read Brewfile at {brewfile_path}: {exc}") from exc
 
@@ -25,16 +25,14 @@ def process_brewfile(
     if normalize_with_brew:
         brewfile_content = normalize_with_brew_bundle(brewfile_path, brewfile_content)
 
-    has_supported_entries = any(
-        [
-            brewfile_content.taps,
-            brewfile_content.brews,
-            brewfile_content.casks,
-            brewfile_content.vscode,
-            brewfile_content.mas_apps,
-            brewfile_content.whalebrews,
-        ]
-    )
+    has_supported_entries = any((
+        brewfile_content.taps,
+        brewfile_content.brews,
+        brewfile_content.casks,
+        brewfile_content.vscode,
+        brewfile_content.mas_apps,
+        brewfile_content.whalebrews,
+    ))
     if not has_supported_entries:
         brewfile_content.unsupported.append(
             ParseIssue(
@@ -129,7 +127,10 @@ Examples:
 
     try:
         if args.dry_run:
-            content = args.brewfile.read_text()
+            try:
+                content = args.brewfile.read_text(encoding="utf-8")
+            except Exception as exc:
+                raise RuntimeError(f"Failed to read Brewfile at {args.brewfile}: {exc}") from exc
             brewfile_content = BrewfileParser.parse(content)
             if args.normalize_with_brew:
                 brewfile_content = normalize_with_brew_bundle(args.brewfile, brewfile_content)

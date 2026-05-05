@@ -1,4 +1,3 @@
-import json
 from pathlib import Path
 from typing import Any, Optional
 
@@ -36,11 +35,6 @@ class AnsiblePlaybookGenerator:
             return ""
         pairs = [f"{k}={v!r}" for k, v in sorted(visible.items())]
         return "; ".join(pairs)
-
-    @staticmethod
-    def _yaml_quote(value: str) -> str:
-        result: str = json.dumps(value)
-        return result
 
     def generate(self, brewfile: BrewfileContent, output_file: Optional[Path] = None) -> str:
         taps = [
@@ -83,6 +77,7 @@ class AnsiblePlaybookGenerator:
                 "_brewfile_options": self._options_summary(app.options),
             }
             for app in brewfile.mas_apps
+            if app.app_id is not None
         ]
 
         whalebrews = [
@@ -107,6 +102,6 @@ class AnsiblePlaybookGenerator:
             raise RuntimeError(f"Failed to render playbook template: {exc}") from exc
 
         if output_file:
-            output_file.write_text(playbook)
+            output_file.write_text(playbook, encoding="utf-8")
 
         return playbook
